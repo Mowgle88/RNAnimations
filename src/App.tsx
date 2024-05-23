@@ -1,13 +1,13 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-import Deck from './components/Deck';
-import {CARDS_DATA} from './constant';
+import {StyleSheet} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import Root from './navigation/Root';
 
 function App(): React.JSX.Element {
   return (
-    <View style={styles.container}>
-      <Deck data={CARDS_DATA} onSwipeLeft={() => {}} onSwipeRight={() => {}} />
-    </View>
+    <GestureHandlerRootView style={styles.container}>
+      <Root />
+    </GestureHandlerRootView>
   );
 }
 
