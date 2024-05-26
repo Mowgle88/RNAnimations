@@ -1,4 +1,4 @@
-import React, {ReactNode, useRef} from 'react';
+import React, {ReactNode, useEffect, useRef, useState} from 'react';
 import {
   Animated,
   Dimensions,
@@ -11,9 +11,12 @@ import {
 const SCREEN_WIDTH = Dimensions.get('screen').width;
 const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
 const SWIPE_OUT_DURATION = 250;
-
+const INIT_POSITION = SCREEN_WIDTH / 2;
+const INIT_ANIMATION_DURATION = 400;
 interface SlidingViewProps {
   children: ReactNode;
+  index?: number;
+  length: number;
   onSwipeComplete?: (direction: string) => void;
   containerStyle?: StyleProp<ViewStyle>;
   disabled?: boolean;
@@ -21,12 +24,19 @@ interface SlidingViewProps {
 
 const SwipebleView: React.FC<SlidingViewProps> = ({
   children,
+  index = 0,
+  length = 1,
   onSwipeComplete = () => {},
   containerStyle,
   disabled = false,
 }) => {
-  const swipePosition = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
+  const [loading, setLoading] = useState(true);
 
+  const initPosition = useRef(new Animated.Value(-INIT_POSITION)).current;
+  const initScale = useRef(new Animated.Value(0)).current;
+  const initRotate = useRef(new Animated.Value(0)).current;
+
+  const swipePosition = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: () => true,
@@ -64,7 +74,7 @@ const SwipebleView: React.FC<SlidingViewProps> = ({
   };
 
   const swipeStyle = () => {
-    const rotate = swipePosition.x.interpolate({
+    const swipeRotate = swipePosition.x.interpolate({
       inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
       outputRange: ['-120deg', '0deg', '120deg'],
     });
@@ -73,16 +83,62 @@ const SwipebleView: React.FC<SlidingViewProps> = ({
       transform: [
         {translateX: swipePosition.x},
         {translateY: swipePosition.y},
-        {rotate},
+        {rotate: swipeRotate},
       ],
       // ...swipePosition.getLayout(),
-      // transform: [{rotate}],
+      // transform: [{rotate: swipeRotate}],
     };
+  };
+
+  useEffect(() => {
+    const startInitAnimate = () => {
+      const config = {
+        toValue: 1,
+        useNativeDriver: false,
+        duration: INIT_ANIMATION_DURATION,
+        delay: (length - index) * 250,
+      };
+
+      Animated.parallel([
+        Animated.timing(initPosition, config),
+        Animated.timing(initScale, config),
+        Animated.timing(initRotate, config),
+      ]).start(() => {
+        setLoading(false);
+      });
+    };
+    startInitAnimate();
+  }, []);
+
+  const initAnimationStyle = () => {
+    const currrentRotate = `${5 * index!}deg`;
+
+    const translateX = initPosition.interpolate({
+      inputRange: [1, INIT_POSITION / 2],
+      outputRange: [0, INIT_POSITION],
+    });
+    const scale = initScale.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1.5, index === 0 ? 1 : 0.9],
+    });
+    const rotate = initRotate.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', `${currrentRotate}`],
+    });
+
+    return {
+      transform: [{rotate}, {scale}, {translateX}],
+    };
+  };
+
+  const animationStyle = () => {
+    const style = disabled ? containerStyle : swipeStyle();
+    return loading ? initAnimationStyle() : style;
   };
 
   if (disabled) {
     return (
-      <Animated.View style={[styles.container, containerStyle]}>
+      <Animated.View style={[styles.container, animationStyle()]}>
         {children}
       </Animated.View>
     );
@@ -90,7 +146,7 @@ const SwipebleView: React.FC<SlidingViewProps> = ({
 
   return (
     <Animated.View
-      style={[styles.container, swipeStyle()]}
+      style={[styles.container, animationStyle()]}
       {...panResponder.panHandlers}>
       {children}
     </Animated.View>

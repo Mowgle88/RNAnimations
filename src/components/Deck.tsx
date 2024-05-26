@@ -36,32 +36,30 @@ const Deck: React.FC<DeckProps> = ({
   };
 
   const animateSecondCard = (callback: () => void) => {
+    const config = {
+      toValue: 1,
+      useNativeDriver: false,
+      duration: SECOND_CARD_ANIMATION_DURATION,
+    };
+
     Animated.parallel([
-      Animated.timing(valueOfScale, {
-        toValue: 1,
-        useNativeDriver: false,
-        duration: SECOND_CARD_ANIMATION_DURATION,
-      }),
-      Animated.timing(valueOfRotate, {
-        toValue: 1,
-        useNativeDriver: false,
-        duration: SECOND_CARD_ANIMATION_DURATION,
-      }),
+      Animated.timing(valueOfScale, config),
+      Animated.timing(valueOfRotate, config),
     ]).start(callback);
   };
 
-  const backgroundItemStyle = (cardIndex: number) => {
-    const currrentRotate = `${5 * cardIndex}deg`;
-    const isSecondCard = cardIndex - index === 1;
+  const backgroundItemStyle = (itemIndex: number) => {
+    const currrentRotate = `${5 * itemIndex}deg`;
+    const isSecondItem = itemIndex - index === 1;
 
-    const rotate = isSecondCard
+    const rotate = isSecondItem
       ? valueOfRotate.interpolate({
           inputRange: [0, 1],
           outputRange: [`${currrentRotate}`, '0deg'],
         })
       : currrentRotate;
 
-    const scale = isSecondCard
+    const scale = isSecondItem
       ? valueOfScale.interpolate({
           inputRange: [0, 1],
           outputRange: [0.9, 1],
@@ -86,6 +84,8 @@ const Deck: React.FC<DeckProps> = ({
         return (
           <SwipebleView
             key={card.id}
+            index={i}
+            length={data.length}
             onSwipeComplete={onSwipeComplete}
             disabled={i !== index}
             containerStyle={backgroundItemStyle(i)}>
