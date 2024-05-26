@@ -1,17 +1,9 @@
 import React, {useRef, useState} from 'react';
-import {
-  StyleSheet,
-  Animated,
-  PanResponder,
-  View,
-  Dimensions,
-} from 'react-native';
+import {StyleSheet, Animated, View} from 'react-native';
 import {EMPTY_CARD_DATA, type CARD_DATA_TYPE} from '../constant';
 import Card from './Card';
+import SwipebleView from './SwipebleView';
 
-const SCREEN_WIDTH = Dimensions.get('screen').width;
-const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
-const SWIPE_OUT_DURATION = 250;
 const SECOND_CARD_ANIMATION_DURATION = 400;
 
 interface DeckProps {
@@ -28,102 +20,46 @@ const Deck: React.FC<DeckProps> = ({
   const [index, setIndex] = useState(0);
 
   const currentData = useRef(data);
-  const swipePosition = useRef(new Animated.ValueXY({x: 0, y: 0})).current;
   const valueOfScale = useRef(new Animated.Value(0)).current;
   const valueOfRotate = useRef(new Animated.Value(0)).current;
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: Animated.event(
-        [null, {dx: swipePosition.x, dy: swipePosition.y}],
-        {useNativeDriver: false},
-      ),
-      onPanResponderRelease: (event, gesture) => {
-        if (gesture.dx > SWIPE_THRESHOLD) {
-          forceSwipe('right');
-        } else if (gesture.dx < -SWIPE_THRESHOLD) {
-          forceSwipe('left');
-        } else {
-          resetPosition();
-        }
-      },
-    }),
-  ).current;
-
-  const resetPosition = () => {
-    Animated.spring(swipePosition, {
-      toValue: {x: 0, y: 0},
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const forceSwipe = (direction: string) => {
-    const x =
-      direction === 'right' ? SCREEN_WIDTH * 1.25 : -SCREEN_WIDTH * 1.25;
-    Animated.timing(swipePosition, {
-      toValue: {x, y: 0},
-      duration: SWIPE_OUT_DURATION,
-      useNativeDriver: false,
-    }).start(() => onSwipeComplete(direction));
-  };
 
   const onSwipeComplete = (direction: string) => {
     const item = data[index];
 
     direction === 'right' ? onSwipeRight(item) : onSwipeLeft(item);
 
-    handleAnimated(() => {
-      swipePosition.setValue({x: 0, y: 0});
+    animateSecondCard(() => {
       valueOfScale.setValue(0);
       valueOfRotate.setValue(0);
       setIndex(prevIndex => prevIndex + 1);
     });
   };
 
-  const handleAnimated = (callback: () => void) => {
+  const animateSecondCard = (callback: () => void) => {
+    const config = {
+      toValue: 1,
+      useNativeDriver: false,
+      duration: SECOND_CARD_ANIMATION_DURATION,
+    };
+
     Animated.parallel([
-      Animated.timing(valueOfScale, {
-        toValue: 1,
-        useNativeDriver: false,
-        duration: SECOND_CARD_ANIMATION_DURATION,
-      }),
-      Animated.timing(valueOfRotate, {
-        toValue: 1,
-        useNativeDriver: false,
-        duration: SECOND_CARD_ANIMATION_DURATION,
-      }),
+      Animated.timing(valueOfScale, config),
+      Animated.timing(valueOfRotate, config),
     ]).start(callback);
   };
 
-  const frontCardStyle = () => {
-    const rotate = swipePosition.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
-      outputRange: ['-120deg', '0deg', '120deg'],
-    });
+  const backgroundItemStyle = (itemIndex: number) => {
+    const currrentRotate = `${5 * itemIndex}deg`;
+    const isSecondItem = itemIndex - index === 1;
 
-    return {
-      transform: [
-        {translateX: swipePosition.x},
-        {translateY: swipePosition.y},
-        {rotate},
-      ],
-      // ...swipePosition.getLayout(),
-      // transform: [{rotate}],
-    };
-  };
-
-  const backgroundCardStyle = (cardIndex: number) => {
-    const currrentRotate = `${5 * cardIndex}deg`;
-    const isSecondCard = cardIndex - index === 1;
-
-    const rotate = isSecondCard
+    const rotate = isSecondItem
       ? valueOfRotate.interpolate({
           inputRange: [0, 1],
           outputRange: [`${currrentRotate}`, '0deg'],
         })
       : currrentRotate;
 
-    const scale = isSecondCard
+    const scale = isSecondItem
       ? valueOfScale.interpolate({
           inputRange: [0, 1],
           outputRange: [0.9, 1],
@@ -145,23 +81,16 @@ const Deck: React.FC<DeckProps> = ({
           return null;
         }
 
-        if (i === index) {
-          return (
-            <Animated.View
-              key={card.id}
-              style={[styles.cardStyle, frontCardStyle()]}
-              {...panResponder.panHandlers}>
-              <Card item={card} onPress={() => {}} />
-            </Animated.View>
-          );
-        }
-
         return (
-          <Animated.View
+          <SwipebleView
             key={card.id}
-            style={[styles.cardStyle, backgroundCardStyle(i)]}>
+            index={i}
+            length={data.length}
+            onSwipeComplete={onSwipeComplete}
+            disabled={i !== index}
+            containerStyle={backgroundItemStyle(i)}>
             <Card item={card} onPress={() => {}} />
-          </Animated.View>
+          </SwipebleView>
         );
       })
       .reverse();
@@ -187,11 +116,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  cardStyle: {
-    flex: 1,
-    position: 'absolute',
-    width: SCREEN_WIDTH,
   },
 });
 
