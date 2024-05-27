@@ -3,6 +3,8 @@ import {StyleSheet, Animated, View} from 'react-native';
 import {EMPTY_CARD_DATA, type CARD_DATA_TYPE} from '../constant';
 import Card from './Card';
 import SwipebleView from './SwipebleView';
+import {useNavigation} from '@react-navigation/native';
+import {HomeScreenNavigationProp} from '../navigation/types';
 
 const SECOND_CARD_ANIMATION_DURATION = 400;
 
@@ -17,6 +19,8 @@ const Deck: React.FC<DeckProps> = ({
   onSwipeRight = () => {},
   onSwipeLeft = () => {},
 }) => {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+
   const [index, setIndex] = useState(0);
 
   const currentData = useRef(data);
@@ -89,7 +93,18 @@ const Deck: React.FC<DeckProps> = ({
             onSwipeComplete={onSwipeComplete}
             disabled={i !== index}
             containerStyle={backgroundItemStyle(i)}>
-            <Card item={card} onPress={() => {}} />
+            <Card
+              item={card}
+              onPress={(color: string) => {
+                navigation.navigate('Details', {
+                  color: color,
+                  id: card.id,
+                  title: card.title,
+                  text: card.text,
+                  src: card.src,
+                });
+              }}
+            />
           </SwipebleView>
         );
       })

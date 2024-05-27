@@ -7,7 +7,7 @@ const SCREEN_WIDTH = Dimensions.get('screen').width;
 
 interface CardProps {
   item: CARD_DATA_TYPE;
-  onPress: () => void;
+  onPress: (color: string) => void;
 }
 
 const Card: React.FC<CardProps> = ({item, onPress}) => {
@@ -19,9 +19,14 @@ const Card: React.FC<CardProps> = ({item, onPress}) => {
       {item.src && (
         <Image source={item.src} resizeMode="cover" style={styles.image} />
       )}
-      <Text style={styles.subtitle}>{item.text}</Text>
+      <Text style={styles.subtitle} numberOfLines={2}>
+        {item.text}
+      </Text>
       <View style={styles.buttonContainer}>
-        <Button title={`${item.button}`} onPress={onPress} />
+        <Button
+          title={`${item.button}`}
+          onPress={() => onPress(backgroundColor)}
+        />
       </View>
     </View>
   );
@@ -50,6 +55,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subtitle: {
+    paddingHorizontal: 16,
     fontSize: 16,
     color: '#233035',
   },
