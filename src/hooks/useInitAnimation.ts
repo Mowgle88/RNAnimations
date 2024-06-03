@@ -16,7 +16,7 @@ export const useInitAnimation = (index: number, length: number) => {
     const startInitAnimate = () => {
       const config = {
         toValue: 1,
-        useNativeDriver: false,
+        useNativeDriver: true,
         duration: INIT_ANIMATION_DURATION,
         delay: (length - index) * 250,
       };
@@ -30,7 +30,7 @@ export const useInitAnimation = (index: number, length: number) => {
       });
     };
     startInitAnimate();
-  }, []);
+  }, [index, initPosition, initRotate, initScale, length]);
 
   const initAnimationStyle = () => {
     const currrentRotate = `${5 * index!}deg`;
