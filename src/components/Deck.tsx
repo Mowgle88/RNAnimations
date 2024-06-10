@@ -42,7 +42,7 @@ const Deck: React.FC<DeckProps> = ({
   const animateSecondCard = (callback: () => void) => {
     const config = {
       toValue: 1,
-      useNativeDriver: false,
+      useNativeDriver: true,
       duration: SECOND_CARD_ANIMATION_DURATION,
     };
 
