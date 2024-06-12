@@ -1,6 +1,7 @@
-import {useNavigation, useRoute} from '@react-navigation/native';
 import React, {useEffect} from 'react';
-import {Dimensions, Image, StyleSheet, Text, View} from 'react-native';
+import {Dimensions, StyleSheet, Text, View} from 'react-native';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import Animated, {FadeInLeft} from 'react-native-reanimated';
 import {DetailsScreenRouteProp} from '../navigation/types';
 
 const SCREEN_WIDTH = Dimensions.get('screen').width;
@@ -21,10 +22,16 @@ const DetailsScreen = () => {
 
   return (
     <View style={[styles.container, {backgroundColor: item.color}]}>
-      <Image source={item.src} resizeMode="cover" style={styles.image} />
-      <View style={styles.textContainer}>
+      <Animated.Image
+        sharedTransitionTag={`${item.id}`}
+        source={item.src}
+        style={styles.image}
+      />
+      <Animated.View
+        style={styles.textContainer}
+        entering={FadeInLeft.duration(400).delay(500)}>
         <Text style={styles.text}>{item.text}</Text>
-      </View>
+      </Animated.View>
     </View>
   );
 };
@@ -36,6 +43,8 @@ const styles = StyleSheet.create({
   image: {
     width: SCREEN_WIDTH,
     height: SCREEN_WIDTH,
+    resizeMode: 'cover',
+    borderRadius: 0,
   },
   textContainer: {
     padding: 16,

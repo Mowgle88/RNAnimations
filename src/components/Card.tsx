@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react';
-import {StyleSheet, Dimensions, View, Text, Image, Button} from 'react-native';
+import {StyleSheet, Dimensions, View, Text, Button} from 'react-native';
+import Animated from 'react-native-reanimated';
 import {type CARD_DATA_TYPE} from '../constant';
 import {getRandomColor} from '../utils/randomColor';
 
@@ -17,7 +18,11 @@ const Card: React.FC<CardProps> = ({item, onPress}) => {
     <View style={[styles.container, {backgroundColor}]}>
       <Text style={styles.title}>{item.title}</Text>
       {item.src && (
-        <Image source={item.src} resizeMode="cover" style={styles.image} />
+        <Animated.Image
+          sharedTransitionTag={`${item.id}`}
+          source={item.src}
+          style={styles.image}
+        />
       )}
       <Text style={styles.subtitle} numberOfLines={2}>
         {item.text}
@@ -52,12 +57,13 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH - 68,
     height: SCREEN_WIDTH - 68,
     borderRadius: 12,
-    marginBottom: 16,
+    resizeMode: 'cover',
   },
   subtitle: {
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#233035',
+    marginTop: 16,
   },
   buttonContainer: {
     marginVertical: 16,
